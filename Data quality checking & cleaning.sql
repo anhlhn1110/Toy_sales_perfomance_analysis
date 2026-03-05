@@ -1,6 +1,3 @@
-select * from sales;
-select * from product;
-
 --Check NULL records in 'sales' dataset
 select *
 from sales
@@ -128,3 +125,4 @@ from product
 where suggested_retail_price < 0 
     or standard_cost < 0;
 --no negative found in product table
+
