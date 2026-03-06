@@ -11,6 +11,9 @@
 ---
 
 # Solutions
+
+Let's collaborate on running the queries using Oracle 19c
+
 # Create view contains revenue and profit of each products
 ```sql
 create or replace view summary_table as
