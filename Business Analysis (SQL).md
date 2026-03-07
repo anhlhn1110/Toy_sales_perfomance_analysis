@@ -7,7 +7,7 @@
 6. How much promotion are there in each month for each product
 7. Calculate total orders, total revenue, total profit and net margin of each products? Order by net margin descending
 8. Calculate the revenue contribution percentage by product?
-9. Find the products with COGs higher than standard cost?
+9. Compare average actual cost with standard cost of each product?
 ---
 
 # Solutions
@@ -20,15 +20,15 @@ create or replace view summary_table as
 select 
         s.id_product,
         s.order_date,
-        sum(units) ttl_orders,
-        sum(s.net_cost_equivalent_cogs) ttl_cost,
+        sum(s.units) ttl_orders,
+        sum(s.units*s.net_cost_equivalent_cogs*p.standard_cost) ttl_cost,
         sum(s.units * p.suggested_retail_price * (1-s.revenue_discount)) ttl_rev
     from cleaned_sales s
     join product p
         on s.id_product = p.id_product
     group by 
         s.id_product,
-        s.order_date
+        s.order_date;
 ```
 ---
 # 1. How many total revenue and total profit?
@@ -50,9 +50,9 @@ select
 from summary_table
 ```
 # Result
-| TTL_PROFIT   |
-|--------------|
-| 4242538.8099 |
+| TTL_PROFIT                 |
+|----------------------------|
+| 1599174.825141999973397414 |
 ---
 # 2. Calculate the revenue on the month basis and month-over-month growth rate?
 ```sql
@@ -311,40 +311,40 @@ select
     id_product,
     sum(ttl_orders) ttl_orders,
     sum(ttl_rev) ttl_rev,
-    sum(ttl_rev) - sum(ttl_cost) ttl_profit,
+    round(sum(ttl_rev) - sum(ttl_cost),2) ttl_profit,
     round((sum(ttl_rev) - sum(ttl_cost)) / sum(ttl_rev),5)*100 as net_margin
 from summary_table
 group by id_product
-order by net_margin desc
+order by net_margin desc;
 ```
 # Result set
-| ID_PRODUCT | TTL_ORDERS | TTL_REV     | TTL_PROFIT  | NET_MARGIN |
-|------------|------------|-------------|-------------|------------|
-| FK-20-10   | 6876       | 609622.0542 | 609353.7942 | 99.956     |
-| BWK-20-4   | 7050       | 346874.268  | 346600.288  | 99.921     |
-| Q-30-17    | 7305       | 194720.9145 | 194460.1945 | 99.866     |
-| MB-30-16   | 23523      | 465381.187  | 464584.737  | 99.829     |
-| CB-10-7    | 8442       | 147137.4615 | 146869.5115 | 99.818     |
-| D-30-11    | 7010       | 143308.0425 | 143046.0125 | 99.817     |
-| EK-40-9    | 14842      | 270048.967  | 269519.287  | 99.804     |
-| C-30-5     | 19966      | 330140.4645 | 329378.5445 | 99.769     |
-| A-10-1     | 7883       | 116139.298  | 115862.738  | 99.762     |
-| TK-40-19   | 7118       | 110706.4497 | 110439.4397 | 99.759     |
-| S-30-18    | 14729      | 213014.174  | 212482.544  | 99.75      |
-| Y-10-20    | 37414      | 528655.086  | 527302.306  | 99.744     |
-| B-30-3     | 6599       | 101686.4695 | 101418.9295 | 99.737     |
-| JS-50-15   | 7662       | 91810.8975  | 91535.2775  | 99.7       |
-| CY-60-6    | 6654       | 81960.3855  | 81691.9755  | 99.673     |
-| DS-50-8    | 5828       | 63651.418   | 63411.838   | 99.624     |
-| BK-40-2    | 28549      | 175734.0145 | 174653.7945 | 99.385     |
-| JB-50-14   | 36416      | 197234.6405 | 195910.4805 | 99.329     |
-| GY-60-12   | 5703       | 32401.2375  | 32144.9475  | 99.209     |
-| GY-60-13   | 7478       | 32161.82    | 31872.17    | 99.099     |
+| ID_PRODUCT | TTL_ORDERS | TTL_REV     | TTL_PROFIT | NET_MARGIN |
+|------------|------------|-------------|------------|------------|
+| GY-60-13   | 7478       | 32161.82    | 19525.51   | 60.71      |
+| JB-50-14   | 36416      | 197234.6405 | 104960.6   | 53.216     |
+| S-30-18    | 14729      | 213014.174  | 97808.34   | 45.916     |
+| GY-60-12   | 5703       | 32401.2375  | 14309.63   | 44.164     |
+| MB-30-16   | 23523      | 465381.187  | 194997.19  | 41.901     |
+| TK-40-19   | 7118       | 110706.4497 | 46265.01   | 41.791     |
+| BK-40-2    | 28549      | 175734.0145 | 73308.38   | 41.716     |
+| DS-50-8    | 5828       | 63651.418   | 26484.14   | 41.608     |
+| Q-30-17    | 7305       | 194720.9145 | 74236.08   | 38.124     |
+| CY-60-6    | 6654       | 81960.3855  | 30077.24   | 36.697     |
+| Y-10-20    | 37414      | 528655.086  | 193655.45  | 36.632     |
+| B-30-3     | 6599       | 101686.4695 | 37216.09   | 36.599     |
+| EK-40-9    | 14842      | 270048.967  | 97012.27   | 35.924     |
+| C-30-5     | 19966      | 330140.4645 | 117555.09  | 35.608     |
+| JS-50-15   | 7662       | 91810.8975  | 32402.64   | 35.293     |
+| D-30-11    | 7010       | 143308.0425 | 50200.96   | 35.03      |
+| BWK-20-4   | 7050       | 346874.268  | 120346.67  | 34.695     |
+| FK-20-10   | 6876       | 609622.0542 | 191134.43  | 31.353     |
+| A-10-1     | 7883       | 116139.298  | 36138.33   | 31.116     |
+| CB-10-7    | 8442       | 147137.4615 | 41540.78   | 28.233     |
 
 # Insight
 
 ###
-In general, the net_margin of all products is nearly 100%, that means all products are effective. The most effective product is FK-20-10
+In general, the net_margin of all products was more than 25%.The most effective product is GY-60-13. Although FK-20-10 made the highest revenue but this product was not effective when it had low net margin.
 
 ---
 # 8. Calculate the revenue contribution percentage by product
@@ -405,46 +405,49 @@ order by cv.cum_percent;
 There are 10 products that contribute 80% revenue. Kite-related products dominate the revenue contribution among top-performing products.
 
 ---
-# 9. Find the products with COGs higher than standard cost?
+# 9. Compare average actual cost with standard cost of each product?
 ```sql
-Select 
-    s.id_product,
-    sum(s.net_cost_equivalent_COGS) ttl_cogs,
-    round(sum(p.standard_cost),2) ttl_standard_cost,
-    round(sum(s.net_cost_equivalent_COGS) - sum(p.standard_cost),2) diff
-from cleaned_sales s
+select 
+    st.id_product,
+    round(sum(st.ttl_cost),2) ttl_cost,
+    sum(st.ttl_orders) tll_orders,
+    round(round(sum(st.ttl_cost),2) / sum(st.ttl_orders),2) avg_actual_cost,
+    round(p.standard_cost,2) standard_cost,
+    round(sum(st.ttl_cost) / sum(st.ttl_orders),2) - round(p.standard_cost,2) diff
+from summary_table st
 join product p
-    on s.id_product = p.id_product
-group by s.id_product
+    on p.id_product = st.id_product
+group by st.id_product, p.standard_cost
+order by diff
 ```
 # Result set
-| ID_PRODUCT | TTL_COGS | TTL_STANDARD_COST | DIFF      |
-|------------|----------|-------------------|-----------|
-| JS-50-15   | 275.62   | 2288.86           | -2013.24  |
-| Q-30-17    | 260.72   | 4614.84           | -4354.12  |
-| A-10-1     | 276.56   | 2993.07           | -2716.51  |
-| C-30-5     | 761.92   | 8638.28           | -7876.36  |
-| DS-50-8    | 239.58   | 1632.6            | -1393.02  |
-| JB-50-14   | 1324.16  | 3587.81           | -2263.65  |
-| GY-60-13   | 289.65   | 523.32            | -233.67   |
-| GY-60-12   | 256.29   | 853.66            | -597.37   |
-| B-30-3     | 267.54   | 2771.65           | -2504.11  |
-| CB-10-7    | 267.95   | 3623.26           | -3355.31  |
-| MB-30-16   | 796.45   | 9819.23           | -9022.78  |
-| Y-10-20    | 1352.78  | 12934.84          | -11582.06 |
-| FK-20-10   | 268.26   | 17406.64          | -17138.38 |
-| BK-40-2    | 1080.22  | 4133.02           | -3052.8   |
-| S-30-18    | 531.63   | 4458.51           | -3926.88  |
-| EK-40-9    | 529.68   | 6603.68           | -6074     |
-| D-30-11    | 262.03   | 3728.52           | -3466.49  |
-| TK-40-19   | 267.01   | 2573.36           | -2306.35  |
-| CY-60-6    | 268.41   | 2223.46           | -1955.05  |
-| BWK-20-4   | 273.98   | 9389.31           | -9115.33  |
+| ID_PRODUCT | TTL_COST  | TLL_ORDERS | AVG_ACTUAL_COST | STANDARD_COST | DIFF  |
+|------------|-----------|------------|-----------------|---------------|-------|
+| FK-20-10   | 418487.62 | 6876       | 60.86           | 64            | -3.14 |
+| BWK-20-4   | 226527.6  | 7050       | 32.13           | 33.77         | -1.64 |
+| Q-30-17    | 120484.83 | 7305       | 16.49           | 17.41         | -0.92 |
+| CB-10-7    | 105596.68 | 8442       | 12.51           | 13.27         | -0.76 |
+| D-30-11    | 93107.08  | 7010       | 13.28           | 14.02         | -0.74 |
+| MB-30-16   | 270384    | 23523      | 11.49           | 12.12         | -0.63 |
+| EK-40-9    | 173036.7  | 14842      | 11.66           | 12.27         | -0.61 |
+| C-30-5     | 212585.38 | 19966      | 10.65           | 11.18         | -0.53 |
+| A-10-1     | 80000.97  | 7883       | 10.15           | 10.65         | -0.5  |
+| Y-10-20    | 334999.64 | 37414      | 8.95            | 9.41          | -0.46 |
+| B-30-3     | 64470.38  | 6599       | 9.77            | 10.23         | -0.46 |
+| TK-40-19   | 64441.44  | 7118       | 9.05            | 9.5           | -0.45 |
+| S-30-18    | 115205.83 | 14729      | 7.82            | 8.26          | -0.44 |
+| JS-50-15   | 59408.26  | 7662       | 7.75            | 8.17          | -0.42 |
+| CY-60-6    | 51883.14  | 6654       | 7.8             | 8.17          | -0.37 |
+| DS-50-8    | 37167.28  | 5828       | 6.38            | 6.72          | -0.34 |
+| BK-40-2    | 102425.64 | 28549      | 3.59            | 3.77          | -0.18 |
+| JB-50-14   | 92274.04  | 36416      | 2.53            | 2.67          | -0.14 |
+| GY-60-12   | 18091.61  | 5703       | 3.17            | 3.3           | -0.13 |
+| GY-60-13   | 12636.31  | 7478       | 1.69            | 1.78          | -0.09 |
 
 # Insight
 
 ###
-All products have COGS smaller than standard cost. That means company control the cost of each product efficiently. Y-10-20 and FK-20-10 have biggest difference between COGS and standard cost.
+All products have average actual cost smaller than standard cost. That means company control the cost of each product efficiently. FK-20-10 have biggest difference between average actual cost and standard cost.
 
 ---
 
